@@ -7,6 +7,7 @@ export interface MigrationConfig {
   seedsDir: string;
   migrationsCollection: string;
   lockCollection: string;
+  timeout: number;
 }
 
 export interface MigrationFile {
@@ -31,6 +32,13 @@ export interface LockDocument {
   expiresAt: Date;
 }
 
+export interface CommandOptions {
+  dryRun?: boolean;
+  to?: string;
+  verbose?: boolean;
+  timeout?: number;
+}
+
 export const DEFAULT_CONFIG: MigrationConfig = {
   uri: "mongodb://localhost:27017",
   database: "myapp",
@@ -38,4 +46,5 @@ export const DEFAULT_CONFIG: MigrationConfig = {
   seedsDir: "seeds",
   migrationsCollection: "_migrations",
   lockCollection: "_migration_lock",
+  timeout: 0,
 };
