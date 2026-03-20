@@ -5,6 +5,7 @@ export { down } from "./commands/down.js";
 export { status } from "./commands/status.js";
 export { reset } from "./commands/reset.js";
 export { seed } from "./commands/seed.js";
+export { fresh } from "./commands/fresh.js";
 export { connect, disconnect } from "./core/connection.js";
 export { MigrationStore } from "./core/store.js";
 export { MigrationLock } from "./core/lock.js";
@@ -13,4 +14,5 @@ export type {
   MigrationFile,
   MigrationRecord,
   MigrationModule,
+  CommandOptions,
 } from "./types/index.js";
