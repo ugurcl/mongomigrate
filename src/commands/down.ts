@@ -3,19 +3,27 @@ import { connect, disconnect } from "../core/connection.js";
 import { MigrationStore } from "../core/store.js";
 import { MigrationLock } from "../core/lock.js";
 import { getMigrationFiles, runMigration } from "../core/runner.js";
-import { log } from "../utils/logger.js";
+import { log, setVerbose } from "../utils/logger.js";
+import { CommandOptions } from "../types/index.js";
 
-export async function down(): Promise<void> {
+export async function down(options: CommandOptions = {}): Promise<void> {
+  if (options.verbose) setVerbose(true);
+
   const config = await loadConfig();
+  const timeout = options.timeout ?? config.timeout;
+
+  log.verbose(`Connecting to ${config.uri}/${config.database}`);
   const db = await connect(config);
   const store = new MigrationStore(db, config.migrationsCollection);
   const lock = new MigrationLock(db, config.lockCollection);
 
-  const acquired = await lock.acquire();
-  if (!acquired) {
-    log.error("Another migration is in progress. Try again later.");
-    await disconnect();
-    process.exit(1);
+  if (!options.dryRun) {
+    const acquired = await lock.acquire();
+    if (!acquired) {
+      log.error("Another migration is in progress. Try again later.");
+      await disconnect();
+      process.exit(1);
+    }
   }
 
   try {
@@ -33,12 +41,18 @@ export async function down(): Promise<void> {
       process.exit(1);
     }
 
-    const ms = await runMigration(db, file.filePath, "down");
+    if (options.dryRun) {
+      log.dryRun("down", file.name);
+      log.info("1 migration would be reverted.");
+      return;
+    }
+
+    const ms = await runMigration(db, file.filePath, "down", timeout);
     await store.remove(file.name);
     log.migration("down", file.name, ms);
     log.success("Reverted 1 migration.");
   } finally {
-    await lock.release();
+    if (!options.dryRun) await lock.release();
     await disconnect();
   }
 }
