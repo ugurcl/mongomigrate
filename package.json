@@ -4,6 +4,14 @@
   "description": "MongoDB migration CLI tool",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ugurcl/mongomigrate"
+  },
+  "homepage": "https://github.com/ugurcl/mongomigrate#readme",
+  "bugs": {
+    "url": "https://github.com/ugurcl/mongomigrate/issues"
+  },
   "bin": {
     "mongomigrate": "dist/cli.js"
   },
