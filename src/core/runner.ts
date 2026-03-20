@@ -32,13 +32,36 @@ export async function loadMigration(
   return mod as MigrationModule;
 }
 
+export function validateMigration(mod: MigrationModule, name: string): void {
+  if (typeof mod.up !== "function") {
+    throw new Error(`Migration "${name}" is missing "up" export.`);
+  }
+  if (typeof mod.down !== "function") {
+    throw new Error(`Migration "${name}" is missing "down" export.`);
+  }
+}
+
 export async function runMigration(
   db: Db,
   filePath: string,
-  direction: "up" | "down"
+  direction: "up" | "down",
+  timeout?: number
 ): Promise<number> {
   const mod = await loadMigration(filePath);
+  const name = filePath.split(/[\\/]/).pop() || filePath;
+  validateMigration(mod, name);
+
   const start = Date.now();
-  await mod[direction](db);
+
+  if (timeout && timeout > 0) {
+    const result = mod[direction](db);
+    const timer = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Migration "${name}" timed out after ${timeout}ms.`)), timeout)
+    );
+    await Promise.race([result, timer]);
+  } else {
+    await mod[direction](db);
+  }
+
   return Date.now() - start;
 }
